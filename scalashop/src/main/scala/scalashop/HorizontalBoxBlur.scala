@@ -40,8 +40,11 @@ object HorizontalBoxBlur extends HorizontalBoxBlurInterface {
    *  Within each row, `blur` traverses the pixels by going from left to right.
    */
   def blur(src: Img, dst: Img, from: Int, end: Int, radius: Int): Unit = {
-  // TODO implement this method using the `boxBlurKernel` method
-  ???
+    for (y <- from until end) {
+      for (x <- 0 until src.width) {
+        dst.update(x, y, boxBlurKernel(src, x, y, radius))
+      }
+    }
   }
 
   /** Blurs the rows of the source image in parallel using `numTasks` tasks.
@@ -51,9 +54,12 @@ object HorizontalBoxBlur extends HorizontalBoxBlurInterface {
    *  rows.
    */
   def parBlur(src: Img, dst: Img, numTasks: Int, radius: Int): Unit = {
-  // TODO implement using the `task` construct and the `blur` method
+    val perTask: Int = Math.max(1, src.height / numTasks)
+    val froms = (0 until src.height by perTask).toList
+    val blurRanges = froms.zip(froms.tail :+ src.height)
+    val tasks = blurRanges.map({ case (from, end) => task { blur(src, dst, from, end, radius) }})
 
-  ???
+    tasks.foreach(task => task.join())
   }
 
 }
