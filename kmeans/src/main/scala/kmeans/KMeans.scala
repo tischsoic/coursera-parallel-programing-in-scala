@@ -44,11 +44,15 @@ class KMeans extends KMeansInterface {
   }
 
   def classify(points: Seq[Point], means: Seq[Point]): Map[Point, Seq[Point]] = {
-    ???
+    val grouped: Map[Point, Seq[Point]] = points.groupBy(p => findClosest(p, means))
+    val z: Map[Point, Seq[Point]] = Map()
+    means.foldLeft(z)((m: Map[Point, Seq[Point]], k) => m + (k -> grouped.getOrElse(k, Seq())) )
   }
 
   def classify(points: ParSeq[Point], means: ParSeq[Point]): ParMap[Point, ParSeq[Point]] = {
-    ???
+    val grouped: ParMap[Point, ParSeq[Point]] = points.groupBy(p => findClosest(p, means))
+    val z: ParMap[Point, ParSeq[Point]] = ParMap()
+    means.foldLeft(z)((m: ParMap[Point, ParSeq[Point]], k) => m + (k -> grouped.getOrElse(k, ParSeq())) )
   }
 
   def findAverage(oldMean: Point, points: Seq[Point]): Point = if (points.isEmpty) oldMean else {
@@ -76,29 +80,33 @@ class KMeans extends KMeansInterface {
   }
 
   def update(classified: Map[Point, Seq[Point]], oldMeans: Seq[Point]): Seq[Point] = {
-    ???
+    oldMeans.map(oldMean => findAverage(oldMean, classified(oldMean)))
   }
 
   def update(classified: ParMap[Point, ParSeq[Point]], oldMeans: ParSeq[Point]): ParSeq[Point] = {
-    ???
+    oldMeans.map(oldMean => findAverage(oldMean, classified(oldMean)))
   }
 
   def converged(eta: Double, oldMeans: Seq[Point], newMeans: Seq[Point]): Boolean = {
-    ???
+    newMeans.zip(oldMeans).forall({ case (newMean, oldMean) => newMean.squareDistance(oldMean) <= eta })
   }
 
   def converged(eta: Double, oldMeans: ParSeq[Point], newMeans: ParSeq[Point]): Boolean = {
-    ???
+    newMeans.zip(oldMeans).forall({ case (newMean, oldMean) => newMean.squareDistance(oldMean) <= eta })
   }
 
   @tailrec
   final def kMeans(points: Seq[Point], means: Seq[Point], eta: Double): Seq[Point] = {
-    if (???) kMeans(???, ???, ???) else ??? // your implementation need to be tail recursive
+    val classified = classify(points, means)
+    val newMeans = update(classified, means)
+    if (!converged(eta, means, newMeans)) kMeans(points, newMeans, eta) else newMeans
   }
 
   @tailrec
   final def kMeans(points: ParSeq[Point], means: ParSeq[Point], eta: Double): ParSeq[Point] = {
-    if (???) kMeans(???, ???, ???) else ??? // your implementation need to be tail recursive
+    val classified = classify(points, means)
+    val newMeans = update(classified, means)
+    if (!converged(eta, means, newMeans)) kMeans(points, newMeans, eta) else newMeans
   }
 }
 

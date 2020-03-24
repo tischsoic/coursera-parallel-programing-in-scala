@@ -66,6 +66,16 @@ class KMeansSuite {
     checkParClassify(points, means, expected)
   }
 
+  @Test def `'kMeans' should work for given points and means and eta`: Unit = {
+    val kMeans = new KMeans()
+    val points: List[Point] = List(new Point(0, 0, 1), new Point(0,0, -1), new Point(0,1,0), new Point(0,10,0))
+    val means: List[Point] = List(new Point(0, -1, 0), new Point(0, 2, 0))
+    val eta = 12.25
+
+    assertEquals(List(new Point(0.0, 0.0, 0.0), new Point(0.0, 5.5, 0.0)).toString, kMeans.kMeans(points, means, eta).toList.toString)
+    assertEquals(List(new Point(0.0, 0.0, 0.0), new Point(0.0, 5.5, 0.0)).toString, kMeans.kMeans(points.par, means.par, eta).toList.toString)
+  }
+
 }
 
 
