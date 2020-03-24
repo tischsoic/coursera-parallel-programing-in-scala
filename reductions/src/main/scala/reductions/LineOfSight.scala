@@ -101,7 +101,7 @@ object LineOfSight extends LineOfSightInterface {
     while (i < until) {
       max = Math.max(max, input(i) / i)
       output(i) = max
-      i += i
+      i += 1
     }
   }
 
