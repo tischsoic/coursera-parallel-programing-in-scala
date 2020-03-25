@@ -55,6 +55,21 @@ import FloatOps._
     assert(quad.total == 1, s"${quad.total} should be 1")
   }
 
+  @Test def `Fork with 4 empty quadrants`: Unit = {
+    val nw = Empty(17.5f, 27.5f, 5f)
+    val ne = Empty(22.5f, 27.5f, 5f)
+    val sw = Empty(17.5f, 32.5f, 5f)
+    val se = Empty(22.5f, 32.5f, 5f)
+    val quad = Fork(nw, ne, sw, se)
+
+    assert(quad.centerX == 20f, s"${quad.centerX} should be 20f")
+    assert(quad.centerY == 30f, s"${quad.centerY} should be 30f")
+    assert(quad.mass == 0f, s"${quad.mass} should be 0f")
+    assert(quad.massX == 20f, s"${quad.massX} should be 20f")
+    assert(quad.massY == 30f, s"${quad.massY} should be 30f")
+    assert(quad.total == 0, s"${quad.total} should be 0")
+  }
+
   @Test def `Empty.insert(b) should return a Leaf with only that body (2pts)`: Unit = {
     val quad = Empty(51f, 46.3f, 5f)
     val b = new Body(3f, 54f, 46f, 0f, 0f)
@@ -68,6 +83,20 @@ import FloatOps._
       case _ =>
         fail("Empty.insert() should have returned a Leaf, was $inserted")
     }
+  }
+
+  @Test def `'insert' should work correctly on a leaf with center (1,1) and size 2`: Unit = {
+    val b1 = new Body(10f, 0.5f, 0.5f, 0f, 0f)
+    val b2 = new Body(10f, 1.5f, 0.5f, 0f, 0f)
+    val nw = Leaf(0.5f, 0.5f, 1f, Seq(b1))
+    val ne = Empty(1.5f, 0.5f, 1f)
+    val sw = Empty(0.5f, 1.5f, 1f)
+    val se = Empty(1.5f, 1.5f, 1f)
+    val quad = Fork(nw, ne, sw, se)
+    val inserted = quad.insert(b2)
+    val insertedProper = Fork(nw, Leaf(1.5f, 0.5f, 1f, Seq(b2)), sw, se)
+
+    assertEquals(inserted, insertedProper)
   }
 
   // test cases for Body
@@ -106,6 +135,34 @@ import FloatOps._
     sm += body
     val res = sm(2, 3).size == 1 && sm(2, 3).find(_ == body).isDefined
     assert(res, s"Body not found in the right sector")
+  }
+
+  @Test def `'SectorMatrix.combine' should correctly combine two sector matrices of size 96 (2pts)`: Unit = {
+    val b1 = new Body(5, 25, 47, 0.1f, 0.1f)
+    val boundaries1 = new Boundaries()
+    boundaries1.minX = 1
+    boundaries1.minY = 1
+    boundaries1.maxX = 97
+    boundaries1.maxY = 97
+    val sm1 = new SectorMatrix(boundaries1, SECTOR_PRECISION)
+    sm1 += b1
+    val res1 = sm1(2, 3).size == 1 && sm1(2, 3).exists(_ == b1)
+    assert(res1, s"Body 1 not found in the right sector")
+
+    val b2 = new Body(15, 25, 47, 0.1f, 0.1f)
+    val boundaries2 = new Boundaries()
+    boundaries2.minX = 1
+    boundaries2.minY = 1
+    boundaries2.maxX = 97
+    boundaries2.maxY = 97
+    val sm2 = new SectorMatrix(boundaries1, SECTOR_PRECISION)
+    sm2 += b2
+    val res2 = sm2(2, 3).size == 1 && sm2(2, 3).exists(_ == b2)
+    assert(res2, s"Body 2 not found in the right sector")
+
+    val sm3 = sm1.combine(sm2)
+    val res3 = sm3(2, 3).size == 2 && sm3(2, 3).exists(_ == b1) && sm3(2, 3).exists(_ == b2)
+    assert(res3, s"Bodies 1, 2 not found in the right sector")
   }
 
   @Rule def individualTestTimeout = new org.junit.rules.Timeout(10 * 1000)
